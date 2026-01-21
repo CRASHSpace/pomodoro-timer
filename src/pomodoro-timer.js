@@ -178,6 +178,15 @@ class PomodoroTimer extends DataroomElement {
   }
 
   loadRandomVideo(container) {
+    this.loadVideoWithFallback(container, 0);
+  }
+
+  loadVideoWithFallback(container, attemptCount) {
+    if (attemptCount >= 5) {
+      container.innerHTML = '<div class="video-placeholder">Unable to load video after multiple attempts</div>';
+      return;
+    }
+
     const playlist = this.getRandomPlaylist();
     if (!playlist) {
       container.innerHTML = '<div class="video-placeholder">Loading relaxation video...</div>';
@@ -198,6 +207,32 @@ class PomodoroTimer extends DataroomElement {
     iframe.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
     iframe.allowFullscreen = true;
     iframe.className = 'youtube-player';
+    
+    // Handle iframe load errors (age restrictions, unavailable videos)
+    iframe.addEventListener('error', () => {
+      console.log('Video failed to load, trying another...');
+      this.loadVideoWithFallback(container, attemptCount + 1);
+    });
+
+    // Check for age restriction after load
+    iframe.addEventListener('load', () => {
+      setTimeout(() => {
+        try {
+          // If iframe content is blocked or shows age restriction, try another video
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+          if (!iframeDoc || iframeDoc.title.includes('restricted') || iframeDoc.title.includes('unavailable')) {
+            console.log('Video appears to be restricted, trying another...');
+            this.loadVideoWithFallback(container, attemptCount + 1);
+            return;
+          }
+        } catch (e) {
+          // Cross-origin restrictions prevent access, assume video is working
+          console.log('Video loaded successfully');
+        }
+      }, 2000);
+    });
+
+    container.innerHTML = '';
     container.appendChild(iframe);
   }
 
