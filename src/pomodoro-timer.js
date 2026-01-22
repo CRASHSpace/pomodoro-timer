@@ -9,9 +9,9 @@ class PomodoroTimer extends DataroomElement {
     this.timeRemaining = 0;
     this.timerInterval = null;
     this.isPaused = false;
-    this.playlists = [];
+    this.videos = [];
     
-    // Load playlists in background
+    // Load videos in background
     this.loadPlaylists().catch(console.error);
     
     // Render immediately
@@ -21,14 +21,14 @@ class PomodoroTimer extends DataroomElement {
 
   async loadPlaylists() {
     try {
-      const response = await fetch('./youtube-playlist.csv');
+      const response = await fetch('/videos.csv');
       const text = await response.text();
-      const lines = text.split('\n').slice(1);
-      this.playlists = lines.filter(line => line.trim()).map(line => line.trim());
-      console.log('Loaded playlists:', this.playlists.length);
+      const lines = text.split('\n');
+      this.videos = lines.filter(line => line.trim()).map(line => line.trim());
+      console.log('Loaded videos:', this.videos.length);
     } catch (error) {
-      console.error('Failed to load playlists:', error);
-      this.playlists = [];
+      console.error('Failed to load videos:', error);
+      this.videos = [];
     }
   }
 
@@ -188,20 +188,20 @@ class PomodoroTimer extends DataroomElement {
       return;
     }
 
-    const playlist = this.getRandomPlaylist();
-    if (!playlist) {
+    const videoUrl = this.getRandomVideo();
+    if (!videoUrl) {
       container.innerHTML = '<div class="video-placeholder">Loading relaxation video...</div>';
       return;
     }
 
-    const playlistId = this.extractPlaylistId(playlist);
-    if (!playlistId) {
-      container.innerHTML = '<div class="video-placeholder">Invalid playlist format</div>';
+    const videoId = this.extractVideoId(videoUrl);
+    if (!videoId) {
+      container.innerHTML = '<div class="video-placeholder">Invalid video format</div>';
       return;
     }
 
     const iframe = document.createElement('iframe');
-    iframe.src = `https://www.youtube.com/embed/videoseries?list=${playlistId}&autoplay=1&mute=1&controls=1&loop=1`;
+    iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&controls=1`;
     iframe.width = '1080';
     iframe.height = '720';
     iframe.frameBorder = '0';
@@ -237,13 +237,13 @@ class PomodoroTimer extends DataroomElement {
     container.appendChild(iframe);
   }
 
-  getRandomPlaylist() {
-    if (this.playlists.length === 0) return null;
-    return this.playlists[Math.floor(Math.random() * this.playlists.length)];
+  getRandomVideo() {
+    if (this.videos.length === 0) return null;
+    return this.videos[Math.floor(Math.random() * this.videos.length)];
   }
 
-  extractPlaylistId(url) {
-    const match = url.match(/[?&]list=([^&]+)/);
+  extractVideoId(url) {
+    const match = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/);
     return match ? match[1] : null;
   }
 
