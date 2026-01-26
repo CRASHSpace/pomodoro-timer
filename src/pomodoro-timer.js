@@ -40,6 +40,9 @@ class PomodoroTimer extends DataroomElement {
     const container = document.createElement('div');
     container.className = 'pomodoro-container start-screen';
     this.appendChild(container);
+    this.create("h2", {content: "Crash Space Professional Development Group"}, container);
+    this.create("h3", {content: "Hackers Helping Hackers", style: "margin-bottom: 2em;"}, container);
+
 
     // Logo
     const logoContainer = document.createElement('div');
@@ -51,11 +54,15 @@ class PomodoroTimer extends DataroomElement {
       .then(svgContent => logoContainer.innerHTML = svgContent)
       .catch(() => logoContainer.innerHTML = '<div class="logo-placeholder">⚡</div>');
 
+
+
     // Title
     const title = document.createElement('h1');
     title.className = 'main-title';
     title.textContent = 'CrashPomodoro';
     container.appendChild(title);
+
+
 
 
     // Start button
